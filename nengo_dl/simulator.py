@@ -564,6 +564,11 @@ class Simulator:  # pylint: disable=too-many-public-methods
         """
         Resets the simulator to initial conditions.
 
+        This involves calling
+        ``soft_reset(include_trainable=True, include_probes=True)``
+        which resets the simulator state (if stateful), all model parameters,
+        and all probe data. In addition, the graph is rebuilt.
+
         Parameters
         ----------
         seed : int
@@ -604,7 +609,8 @@ class Simulator:  # pylint: disable=too-many-public-methods
         ----------
         include_trainable : bool
             If True, also reset any training that has been performed on
-            simulator parameters (e.g., connection weights).
+            simulator parameters (e.g., connection weights), including
+            any weights that may have been loaded.
         include_probes : bool
             If True, also clear probe data.
 
