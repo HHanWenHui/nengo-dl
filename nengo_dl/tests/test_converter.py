@@ -701,3 +701,30 @@ def test_layer_dicts():
 
     assert conv.outputs[x0].target is conv.layers[x0]
     assert conv.outputs[x1].target is conv.layers[x1]
+
+
+def test_get_input_tensor_error(Simulator):
+    class MyLayer(tf.keras.layers.ReLU):
+        pass
+
+    @converter.Converter.register(MyLayer)  # pylint: disable=unused-variable
+    class ConvertMyLayer(converter.LayerConverter):
+        unsupported_args = []
+
+        def convert(self, node_id):
+            # manually remove the input node from the layer_map
+            input_tensor = self.layer.inbound_nodes[node_id].input_tensors
+            input_layer, input_node_id, _ = self.get_history(input_tensor)
+            self.converter.layer_map[input_layer].pop(input_node_id)
+
+            return self.get_input_obj(node_id, allow_none=False)
+
+    try:
+        inp = tf.keras.Input(shape=(1,))
+        x0 = MyLayer()(inp)
+        model = tf.keras.Model(inp, [x0])
+
+        with pytest.raises(ValueError, match="Input tensor .* has not been converted"):
+            converter.Converter(model)
+    finally:
+        converter.Converter.converters.pop(MyLayer)
