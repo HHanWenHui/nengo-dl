@@ -728,3 +728,34 @@ def test_get_input_tensor_error(Simulator):
             converter.Converter(model)
     finally:
         converter.Converter.converters.pop(MyLayer)
+
+
+def test_mid_model_output(Simulator):
+    """Check that converter supports output tensors from the middle of the model.
+
+    Previous converter put output tensors last in build order, so having an output
+    tensor that needed to be built before non-output tensors was problematic.
+    https://github.com/nengo/nengo-dl/pull/137
+    """
+    input_val = 2.0
+    n_steps = 5
+
+    # model must have at least three layers, with one layer in between outputs
+    inp = tf.keras.Input(shape=(1,))
+    x0 = tf.keras.layers.ReLU()(inp)
+    x1 = tf.keras.layers.ReLU()(x0)
+    x2 = tf.keras.layers.ReLU()(x1)
+    model = tf.keras.Model(inp, [x0, x2])
+
+    conv = converter.Converter(
+        model, swap_activations={tf.nn.relu: nengo.RectifiedLinear()},
+    )
+
+    with Simulator(conv.net) as sim:
+        sim.run_steps(
+            n_steps, data={conv.inputs[inp]: np.ones((1, n_steps, 1)) * input_val}
+        )
+
+        output_probes = [conv.outputs[output] for output in model.outputs]
+        for probe in output_probes:
+            assert np.allclose(sim.data[probe][-1], input_val)
