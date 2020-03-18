@@ -161,6 +161,7 @@ ci_scripts:
     pip_install:
       - $TF_VERSION
       - $NUMPY_VERSION
+      - git+https://github.com/nengo/nengo-sphinx-theme@rename-modules
   - template: gpu
     host: abrgpu
     travis_var_key: fcdbeb54a1c4
@@ -222,6 +223,7 @@ travis_yml:
   pypi_user: drasmuss
   deploy_dists:
     - sdist
+  bones_install: git+https://github.com/nengo/nengo-bones@mod-renames
 
 codecov_yml:
   abs_target: 100%
