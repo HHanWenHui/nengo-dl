@@ -223,7 +223,7 @@ travis_yml:
   pypi_user: drasmuss
   deploy_dists:
     - sdist
-  bones_install: git+https://github.com/nengo/nengo-bones@mod-renames
+  bones_install: git+https://github.com/nengo/nengo-bones
 
 codecov_yml:
   abs_target: 100%
